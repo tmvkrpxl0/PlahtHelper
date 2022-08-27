@@ -10,9 +10,8 @@
         android:name="kr.dshs.planthelper.MainFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_main">
-
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
+            android:id="@+id/action_MainFragment_to_PlantFragment"
             app:destination="@id/PlantFragment" />
     </fragment>
     <fragment
@@ -20,9 +19,8 @@
         android:name="kr.dshs.planthelper.PlantInfoFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_plant_info">
-
         <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
+            android:id="@+id/action_PlantFragment_to_MainFragment"
             app:destination="@id/MainFragment" />
     </fragment>
 </navigation>

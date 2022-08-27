@@ -22,7 +22,7 @@ class PlantInfoFragment : Fragment() {
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         _binding = FragmentPlantInfoBinding.inflate(inflater, container, false)
         return binding.root
@@ -33,7 +33,7 @@ class PlantInfoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.buttonSecond.setOnClickListener {
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+            findNavController().navigate(R.id.MainFragment)
         }
     }
 

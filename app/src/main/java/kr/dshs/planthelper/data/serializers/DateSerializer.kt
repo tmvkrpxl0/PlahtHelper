@@ -1,4 +1,4 @@
-package kr.dshs.planthelper.data
+package kr.dshs.planthelper.data.serializers
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

@@ -1,0 +1,91 @@
+[
+  {
+    "name": "",
+    "accepted_temperature": [0, 0],
+    "watering_period": "0d 0h 0m 0s..0d 0h 0m 0s",
+    "max_height_meter": 0.0,
+    "needs_sunlight": "harmful",
+    "grow_environment": "in",
+    "replace_soil_year": [0, 2],
+    "description": "asdf"
+  },
+
+  {
+    "name": "행우목",
+    "accepted_temperature": [21, 25],
+    "watering_period": "7d..7d",
+    "max_height_meter": 3.0,
+    "needs_sunlight": "required",
+    "grow_environment": "in",
+    "replace_soil_year": [1, 2],
+    "description": "여름철 강한 햇빛 주의"
+  },
+  {
+    "name": "무늬 푸밀라 고무나무",
+    "accepted_temperature": [21, 25],
+    "watering_period": "4d..6d",
+    "max_height_meter": 0.2,
+    "needs_sunlight": "required",
+    "grow_environment": "in",
+    "replace_soil_year": [1, 2],
+    "description": "여름철 강한 햇빛 주의"
+  },
+  {
+    "name": "필로덴드론",
+    "accepted_temperature": [13, 33],
+    "watering_period": "10d..15d",
+    "max_height_meter": 0.0,
+    "needs_sunlight": "required",
+    "grow_environment": "in",
+    "replace_soil_year": [2, 2],
+    "description": "강한 햇빛 주의"
+  },
+  {
+    "name": "스킨답서스",
+    "accepted_temperature": [18, 24],
+    "watering_period": "4d..7d",
+    "max_height_meter": 0.25,
+    "needs_sunlight": "required",
+    "grow_environment": "in",
+    "replace_soil_year": [1, 2],
+    "description": "강한 햇빛 주의"
+  },
+  {
+    "name": "시페루스",
+    "accepted_temperature": [16, 20],
+    "max_height_meter": 1.0,
+    "needs_sunlight": "required",
+    "grow_environment": "inout",
+    "description": "물속에서 자람"
+  },
+  {
+    "name": "산세비에리아",
+    "accepted_temperature": [18, 27],
+    "watering_period": "30d..32d",
+    "max_height_meter": 3.0,
+    "needs_sunlight": "required",
+    "grow_environment": "inout",
+    "replace_soil_year": [2, 2],
+    "description": "강한 햇빛 주의"
+  },
+  {
+    "name": "아레카 야자",
+    "accepted_temperature": [16, 20],
+    "watering_period": "6d..8d",
+    "max_height_meter": 2.0,
+    "needs_sunlight": "required",
+    "grow_environment": "inout",
+    "replace_soil_year": [1, 1],
+    "description": "asdf"
+  },
+  {
+    "name": "아디안텀",
+    "accepted_temperature": [25, 26],
+    "watering_period": "6d..8d",
+    "max_height_meter": 0.15,
+    "needs_sunlight": "required",
+    "grow_environment": "in",
+    "replace_soil_year": [1, 1],
+    "description": "강한 햇빛 주의"
+  }
+]

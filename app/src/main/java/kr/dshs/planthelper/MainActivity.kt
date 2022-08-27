@@ -1,5 +1,6 @@
 package kr.dshs.planthelper
 
+import android.net.Uri
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -9,7 +10,21 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
+import kr.dshs.planthelper.data.GrowEnvironment
+import kr.dshs.planthelper.data.PlantAcademic
+import kr.dshs.planthelper.data.PlantProfile
+import kr.dshs.planthelper.data.SunlightDemands
 import kr.dshs.planthelper.databinding.ActivityMainBinding
+import java.util.*
+import kotlin.time.Duration.Companion.days
+
+val plantAcademic = mutableListOf(
+    PlantAcademic("test", 25..30, 6.days..8.days, 1.0, SunlightDemands.OPTIONAL, GrowEnvironment.IN, null, "none")
+)
+
+val plantProfiles = mutableListOf(
+    PlantProfile(plantAcademic[0], null, Date(2022, 2, 1), Uri.parse("file://a.png"))
+)
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,11 +42,6 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
-
-        binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

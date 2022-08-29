@@ -1,19 +1,25 @@
 package kr.dshs.planthelper
 
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
+import android.provider.MediaStore
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import android.view.Menu
-import android.view.MenuItem
-import kr.dshs.planthelper.data.GrowEnvironment
-import kr.dshs.planthelper.data.PlantAcademic
-import kr.dshs.planthelper.data.PlantProfile
-import kr.dshs.planthelper.data.SunlightDemands
+import androidx.activity.result.contract.ActivityResultContracts
+import com.github.kittinunf.fuel.Fuel
+import com.github.kittinunf.fuel.core.FuelError
+import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.Response
+import com.github.kittinunf.fuel.serialization.responseObject
+import com.github.kittinunf.result.Result
+import kotlinx.serialization.json.Json
+import kr.dshs.planthelper.data.*
 import kr.dshs.planthelper.databinding.ActivityMainBinding
 import java.util.*
 import kotlin.time.Duration.Companion.days
@@ -27,10 +33,6 @@ val plantProfiles = mutableListOf(
 )
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMainBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -42,22 +44,8 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
-        }
+        plantNetKey = resources.openRawResource(R.raw.plantnetkey).reader().readText()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -65,4 +53,43 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
     }
+
+    fun requestPhoto() {
+        val calendar = Calendar.getInstance()
+
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH) + 1
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+        val second = calendar.get(Calendar.SECOND)
+
+        val photoFile = filesDir.resolve("$year-$month-$day-$hour-$minute-$second")
+
+        val photoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
+
+        resultLauncher.launch(photoIntent)
+    }
+
+    private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val photoFile = result.data!!.extras!!.get(MediaStore.EXTRA_OUTPUT)
+            Fuel.post(
+                path = "https://my-api.plantnet.org/v2/identify/all",
+                parameters = listOf(
+                    "api-key" to plantNetKey,
+                    "images" to arrayOf(photoFile),
+                    "organs" to "auto"
+                )
+            ).responseObject(Json { ignoreUnknownKeys = true }) { request: Request, response: Response, plantNetResult: Result<PlantNetResponse, FuelError> ->
+                val plantInfo = plantNetResult.get()
+                Toast.makeText(this, plantInfo.results[0].species[0].scientificNameWithoutAuthor, Toast.LENGTH_SHORT)
+            }
+        }
+    }
+
+    private lateinit var appBarConfiguration: AppBarConfiguration
+    private lateinit var binding: ActivityMainBinding
+
+    private lateinit var plantNetKey: String
 }

@@ -18,15 +18,14 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.serialization.responseObject
 import com.github.kittinunf.result.Result
+import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kr.dshs.planthelper.data.*
 import kr.dshs.planthelper.databinding.ActivityMainBinding
 import java.util.*
 import kotlin.time.Duration.Companion.days
 
-val plantAcademic = mutableListOf(
-    PlantAcademic("test", 25..30, 6.days..8.days, 1.0, SunlightDemands.OPTIONAL, GrowEnvironment.IN, null, "none")
-)
+lateinit var plantAcademic: List<PlantAcademic>
 
 val plantProfiles = mutableListOf(
     PlantProfile(plantAcademic[0], null, Date(2022, 2, 1), Uri.parse("file://a.png"))
@@ -35,6 +34,8 @@ val plantProfiles = mutableListOf(
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val contents = resources.openRawResource(R.raw.academic_plants).bufferedReader().readText()
+        plantAcademic = Json.decodeFromString(contents)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

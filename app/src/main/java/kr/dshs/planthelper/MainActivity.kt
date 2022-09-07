@@ -27,15 +27,15 @@ import kotlin.time.Duration.Companion.days
 
 lateinit var plantAcademic: List<PlantAcademic>
 
-val plantProfiles = mutableListOf(
-    PlantProfile(plantAcademic[0], null, Date(2022, 2, 1), Uri.parse("file://a.png"))
-)
+val plantProfiles = mutableListOf<PlantProfile>()
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val contents = resources.openRawResource(R.raw.academic_plants).bufferedReader().readText()
         plantAcademic = Json.decodeFromString(contents)
+
+        plantProfiles += PlantProfile(plantAcademic[0], null, Date(2022, 2, 1), Uri.parse("file://a.png"))
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -16,7 +16,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floatingActionButton"
+        android:id="@+id/addplant"
         android:layout_width="58dp"
         android:layout_height="60dp"
         android:clickable="true"

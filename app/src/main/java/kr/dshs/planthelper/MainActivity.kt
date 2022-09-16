@@ -1,8 +1,11 @@
 package kr.dshs.planthelper
 
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
@@ -23,7 +26,6 @@ import kotlinx.serialization.json.Json
 import kr.dshs.planthelper.data.*
 import kr.dshs.planthelper.databinding.ActivityMainBinding
 import java.util.*
-import kotlin.time.Duration.Companion.days
 
 lateinit var plantAcademic: List<PlantAcademic>
 
@@ -34,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val contents = resources.openRawResource(R.raw.academic_plants).bufferedReader().readText()
         plantAcademic = Json.decodeFromString(contents)
+        createChannel()
 
         plantProfiles += PlantProfile(plantAcademic[0], null, Date(2022, 2, 1), Uri.parse("file://a.png"))
 
@@ -53,6 +56,17 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
+    }
+
+    private fun createChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Plant Helper Alarm Channel"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelId, name, importance)
+
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
     }
 
     fun requestPhoto() {

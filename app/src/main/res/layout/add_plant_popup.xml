@@ -43,21 +43,21 @@
         android:id="@+id/editTextTextPersonName"
         android:layout_width="198dp"
         android:layout_height="73dp"
-        android:layout_marginStart="32dp"
+        android:layout_marginStart="16dp"
         android:ems="10"
         android:hint="식물 이름으로 검색"
         android:inputType="textPersonName"
         app:layout_constraintBottom_toTopOf="@+id/editTextTextPersonName2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.649"
+        app:layout_constraintTop_toBottomOf="@+id/textView5"
+        app:layout_constraintVertical_bias="0.723"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="118dp"
         android:layout_height="83dp"
-        android:layout_marginEnd="64dp"
+        android:layout_marginEnd="44dp"
         android:layout_marginBottom="56dp"
         android:text="add"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -67,55 +67,24 @@
         android:id="@+id/editTextTextPersonName2"
         android:layout_width="200dp"
         android:layout_height="50dp"
-        android:layout_marginStart="36dp"
-        android:layout_marginBottom="28dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="452dp"
         android:ems="10"
         android:hint="식물에 붙여줄 또 다른 이름(선택사항)"
         android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/textView8"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/textView8"
-        android:layout_width="148dp"
-        android:layout_height="25dp"
-        android:layout_marginStart="28dp"
-        android:layout_marginBottom="24dp"
-        android:text="planting date"
-        app:layout_constraintBottom_toTopOf="@+id/editTextTextPersonName4"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/textView9"
-        android:layout_width="215dp"
-        android:layout_height="25dp"
-        android:layout_marginStart="28dp"
-        android:layout_marginBottom="16dp"
-        android:text="last date of soil replacement"
-        app:layout_constraintBottom_toTopOf="@+id/editTextTextPersonName3"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <EditText
-        android:id="@+id/editTextTextPersonName3"
-        android:layout_width="200dp"
-        android:layout_height="45dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginBottom="176dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="date"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        app:layout_constraintVertical_bias="1.0" />
 
-    <EditText
-        android:id="@+id/editTextTextPersonName4"
-        android:layout_width="200dp"
-        android:layout_height="45dp"
-        android:layout_marginStart="28dp"
-        android:layout_marginBottom="16dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="date"
-        app:layout_constraintBottom_toTopOf="@+id/textView9"
-        app:layout_constraintStart_toStartOf="parent" />
+    <TimePicker
+        android:id="@+id/time"
+        android:layout_width="191dp"
+        android:layout_height="322dp"
+        android:layout_marginEnd="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/button2"
+        app:layout_constraintEnd_toEndOf="parent">
+
+    </TimePicker>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

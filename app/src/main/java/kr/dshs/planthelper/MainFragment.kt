@@ -1,14 +1,20 @@
 package kr.dshs.planthelper
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kr.dshs.planthelper.databinding.AddPlantPopupBinding
 import kr.dshs.planthelper.databinding.FragmentMainBinding
+import java.util.*
 
 class MainFragment : Fragment() {
     private var _binding: FragmentMainBinding? = null
@@ -45,7 +51,8 @@ class MainFragment : Fragment() {
         val addButton = view.findViewById<FloatingActionButton>(R.id.addplant)
 
         addButton.setOnClickListener {
-            val popupView = layoutInflater.inflate(R.layout.add_plant_popup, null);
+            val popupView = layoutInflater.inflate(R.layout.add_plant_popup, null)
+            // val binding = AddPlantPopupBinding.bind(popupView)
 
             val width = LinearLayout.LayoutParams.WRAP_CONTENT
             val height = LinearLayout.LayoutParams.WRAP_CONTENT
@@ -55,6 +62,25 @@ class MainFragment : Fragment() {
             popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0)
             popupWindow.dimBehind()
         }
+    }
+
+    private fun scheduleNotification(context: Context, binding: AddPlantPopupBinding) {
+        val intent = Intent(context, AlarmBroadcast::class.java)
+        val pending = PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val time = getTime(binding)
+
+    }
+
+    private fun getTime(binding: AddPlantPopupBinding): Long {
+        val minute = binding.time.minute
+        val hour = binding.time.hour
+
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        return calendar.timeInMillis
     }
 
 

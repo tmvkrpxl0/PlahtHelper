@@ -1,55 +1,95 @@
 package kr.dshs.planthelper
 
-import android.app.Activity
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Toast
+import android.util.Log
+import android.webkit.MimeTypeMap
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.activity.result.contract.ActivityResultContracts
-import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.FuelError
-import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.fuel.core.Response
-import com.github.kittinunf.fuel.serialization.responseObject
-import com.github.kittinunf.result.Result
-import kotlinx.serialization.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kr.dshs.planthelper.data.*
+import kr.dshs.planthelper.data.PlantAcademic
+import kr.dshs.planthelper.data.PlantProfile
 import kr.dshs.planthelper.databinding.ActivityMainBinding
+import java.io.File
 import java.util.*
+
 
 lateinit var plantAcademic: List<PlantAcademic>
 
 val plantProfiles = mutableListOf<PlantProfile>()
 
 class MainActivity : AppCompatActivity() {
+    lateinit var mainFragment: MainFragment
+    var capturedImage: File? = null
+
+    @Suppress("DeferredResultUnused")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val contents = resources.openRawResource(R.raw.academic_plants).bufferedReader().readText()
-        plantAcademic = Json.decodeFromString(contents)
-        createChannel()
 
-        plantProfiles += PlantProfile(plantAcademic[0], null, Date(2022, 2, 1), Uri.parse("file://a.png"))
+        runBlocking {
+            launch(Dispatchers.IO) {
+                val contents =
+                    resources.openRawResource(R.raw.academic_plants).bufferedReader().readText()
+                plantAcademic = Json.decodeFromString(contents)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+                plantProfiles += PlantProfile(
+                    plantAcademic[0],
+                    null,
+                    Calendar.getInstance().apply{ set(2022, 2, 1) }.time,
+                    Uri.parse("file://a.png")
+                )
+            }
+            createChannel()
+            launch {
+                if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                    || checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                    || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    ActivityCompat.requestPermissions(
+                        this@MainActivity,
+                        arrayOf(
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ),
+                        1
+                    )
+                }
+            }
 
-        setSupportActionBar(binding.toolbar)
+            launch(Dispatchers.IO) {
+                plantNetKey = resources.openRawResource(R.raw.plantnetkey).reader().readText()
+            }
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+            launch {
+                binding = ActivityMainBinding.inflate(layoutInflater)
+                setContentView(binding.root)
+                setSupportActionBar(binding.toolbar)
+            }
 
-        plantNetKey = resources.openRawResource(R.raw.plantnetkey).reader().readText()
+            launch {
+                val navController = findNavController(R.id.nav_host_fragment_content_main)
+                appBarConfiguration = AppBarConfiguration(navController.graph)
+                setupActionBarWithNavController(navController, appBarConfiguration)
+            }
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -59,52 +99,109 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Plant Helper Alarm Channel"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(channelId, name, importance)
+        val name = "Plant Helper Alarm Channel"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(channelId, name, importance)
 
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
+    }
+
+    fun requestNewPhoto() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+            || checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+        } else {
+            @Suppress("DEPRECATION")
+            startActivityForResult(intent, NEW_PHOTO_REQUEST)
         }
     }
 
-    fun requestPhoto() {
-        val calendar = Calendar.getInstance()
+    fun requestGalleryPhoto() {
+        val contents = Intent(Intent.ACTION_GET_CONTENT)
+        contents.type = "image/*"
 
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH) + 1
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-        val second = calendar.get(Calendar.SECOND)
+        val pick = Intent(Intent.ACTION_PICK)
+        pick.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
 
-        val photoFile = filesDir.resolve("$year-$month-$day-$hour-$minute-$second")
+        val chooserIntent = Intent.createChooser(contents, "Select Image")
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(pick))
 
-        val photoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
-
-        resultLauncher.launch(photoIntent)
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+            || checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+        } else {
+            @Suppress("DEPRECATION")
+            startActivityForResult(chooserIntent, GALLERY_PHOTO_REQUEST)
+        }
     }
 
-    private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val photoFile = result.data!!.extras!!.get(MediaStore.EXTRA_OUTPUT)
-            Fuel.post(
-                path = "https://my-api.plantnet.org/v2/identify/all",
-                parameters = listOf(
-                    "api-key" to plantNetKey,
-                    "images" to arrayOf(photoFile),
-                    "organs" to "auto"
-                )
-            ).responseObject(Json { ignoreUnknownKeys = true }) { request: Request, response: Response, plantNetResult: Result<PlantNetResponse, FuelError> ->
-                val plantInfo = plantNetResult.get()
-                Toast.makeText(this, plantInfo.results[0].species[0].scientificNameWithoutAuthor, Toast.LENGTH_SHORT)
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, intent)
+        if (resultCode != RESULT_OK) {
+            val trace = Exception().stackTraceToString()
+            Log.d("TRACE", trace)
+            return
+        }
+
+        runBlocking {
+            if (requestCode == GALLERY_PHOTO_REQUEST && intent!!.data != null) {
+                val imageUri = intent.data!!
+                launch {
+                    mainFragment.plantSelectPopup!!.findViewById<ImageButton>(R.id.camerabutton).setImageURI(imageUri)
+                }
+                mainFragment.tookPicture = true
+
+                launch(Dispatchers.IO) {
+                    val copiedFile = filesDir.resolve("${UUID.randomUUID()}.${getMimeType(imageUri)}")
+                    contentResolver.openInputStream(imageUri)!!.buffered().use { it.copyTo(copiedFile.outputStream().buffered()) }
+                    capturedImage = copiedFile
+                }
+            } else if (requestCode == NEW_PHOTO_REQUEST && intent!!.hasExtra("data")) {
+                launch {
+                    mainFragment.plantSelectPopup!!.findViewById<ImageButton>(R.id.camerabutton).setImageBitmap(intent.extras!!.get("data") as Bitmap)
+                }
+                mainFragment.tookPicture = true
+
+                launch(Dispatchers.IO) {
+                    val tempFile = filesDir.resolve("${UUID.randomUUID()}.png")
+                    tempFile.outputStream().buffered().use {
+                        (intent.extras!!.get("data") as Bitmap).compress(Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    capturedImage = tempFile
+                }
+            } else {
+                throw IllegalStateException("Code: $requestCode, has data from extra: ${intent?.hasExtra("data")}, data field: ${intent?.data}")
             }
         }
+
+    }
+
+    fun getMimeType(uri: Uri): String? {
+        //Check uri format to avoid null
+        val extension: String? = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            //If scheme is a content
+            val mime = MimeTypeMap.getSingleton()
+            mime.getExtensionFromMimeType(contentResolver.getType(uri))
+        } else {
+            //If scheme is a File
+            //This will replace white spaces with %20 and also other special characters. This will avoid returning null values on file name with spaces and special characters.
+            MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(File(uri.path!!)).toString())
+        }
+        return extension
     }
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var plantNetKey: String
+    lateinit var plantNetKey: String
+
+    companion object {
+        private const val NEW_PHOTO_REQUEST = 128946
+        private const val GALLERY_PHOTO_REQUEST = 2690854
+    }
 }

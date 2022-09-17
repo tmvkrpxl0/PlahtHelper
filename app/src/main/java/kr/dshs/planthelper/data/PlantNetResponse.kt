@@ -4,68 +4,55 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PlantNetResponse(
-    val results: Array<Result>
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    val bestMatch: String,
+    val language: String,
+    val preferedReferential: String,
+    val query: Query,
+    val remainingIdentificationRequests: Int,
+    val results: List<Result>,
+    val version: String
+)
 
-        other as PlantNetResponse
-
-        if (!results.contentEquals(other.results)) return false
-
-        return true
-    }
-    override fun hashCode(): Int {
-        return results.contentHashCode()
-    }
-
-}
+@Serializable
+data class Query(
+    val images: List<String>,
+    val includeRelatedImages: Boolean,
+    val organs: List<String>,
+    val project: String
+)
 
 @Serializable
 data class Result(
+    val gbif: Gbif,
     val score: Double,
-    val species: Array<Specie>
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Result
-
-        if (score != other.score) return false
-        if (!species.contentEquals(other.species)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = score.hashCode()
-        result = 31 * result + species.contentHashCode()
-        return result
-    }
-}
+    val species: Species
+)
 
 @Serializable
-data class Specie(
-    val scientificNameWithoutAuthor: String,
-    val commonNames: Array<String>
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+data class Gbif(
+    val id: String
+)
 
-        other as Specie
+@Serializable
+data class Species(
+    val commonNames: List<String>,
+    val family: Family,
+    val genus: Genus,
+    val scientificName: String,
+    val scientificNameAuthorship: String,
+    val scientificNameWithoutAuthor: String
+)
 
-        if (scientificNameWithoutAuthor != other.scientificNameWithoutAuthor) return false
-        if (!commonNames.contentEquals(other.commonNames)) return false
+@Serializable
+data class Family(
+    val scientificName: String,
+    val scientificNameAuthorship: String,
+    val scientificNameWithoutAuthor: String
+)
 
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = scientificNameWithoutAuthor.hashCode()
-        result = 31 * result + commonNames.contentHashCode()
-        return result
-    }
-}
+@Serializable
+data class Genus(
+    val scientificName: String,
+    val scientificNameAuthorship: String,
+    val scientificNameWithoutAuthor: String
+)

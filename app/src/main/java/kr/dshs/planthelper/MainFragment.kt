@@ -1,34 +1,46 @@
 package kr.dshs.planthelper
 
 import android.app.AlarmManager
+import android.app.AlertDialog
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.*
-import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.github.kittinunf.fuel.Fuel
+import com.github.kittinunf.fuel.core.FileDataPart
+import com.github.kittinunf.fuel.core.Method
+import com.github.kittinunf.fuel.serialization.responseObject
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kr.dshs.planthelper.data.PlantAcademic
+import kr.dshs.planthelper.data.PlantNetResponse
 import kr.dshs.planthelper.databinding.AddPlantPopupBinding
 import kr.dshs.planthelper.databinding.FragmentMainBinding
 import java.util.*
 
 class MainFragment : Fragment() {
-    private var _binding: FragmentMainBinding? = null
+    var plantSelectPopup: View? = null
+    private lateinit var mainActivity: MainActivity
+    var tookPicture = false
 
     // This property is only valid between onCreateView and
     // onDestroyView.
-    private val binding get() = _binding!!
+    private lateinit var binding: FragmentMainBinding
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View {
-
-        _binding = FragmentMainBinding.inflate(inflater, container, false)
+        binding = FragmentMainBinding.inflate(inflater, container, false)
+        mainActivity = requireActivity() as MainActivity
+        mainActivity.mainFragment = this
         return binding.root
 
     }
@@ -44,23 +56,88 @@ class MainFragment : Fragment() {
 
         val navController = findNavController()
 
-        listView.setOnItemClickListener { parent: AdapterView<*>, clicked: View, position: Int, id: Long ->
+        listView.setOnItemClickListener { _: AdapterView<*>, _: View, _: Int, _: Long ->
             navController.navigate(R.id.PlantFragment)
         }
 
         val addButton = view.findViewById<FloatingActionButton>(R.id.addplant)
 
         addButton.setOnClickListener {
-            val popupView = layoutInflater.inflate(R.layout.add_plant_popup, null)
-            // val binding = AddPlantPopupBinding.bind(popupView)
+            plantSelectPopup = layoutInflater.inflate(R.layout.add_plant_popup, null)
+            val popupBinding = AddPlantPopupBinding.bind(plantSelectPopup!!)
+            plantSelectPopup!!.removeCallbacks {
+                plantSelectPopup = null
+                tookPicture = false
+            }
 
             val width = LinearLayout.LayoutParams.WRAP_CONTENT
             val height = LinearLayout.LayoutParams.WRAP_CONTENT
 
-            val popupWindow = PopupWindow(popupView, width, height, true)
+            val popupWindow = PopupWindow(plantSelectPopup, width, height, true)
 
             popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0)
             popupWindow.dimBehind()
+
+            popupBinding.cancelbutton.setOnClickListener {
+                popupWindow.dismiss()
+            }
+
+            popupBinding.camerabutton.setOnClickListener {
+                val mainActivity = requireActivity() as MainActivity
+
+                val alert = AlertDialog.Builder(mainActivity)
+                alert.run {
+                    setMessage("이미지 가져올 방법")
+                    setPositiveButton("카메라") { _, _ ->
+                        mainActivity.requestNewPhoto()
+                    }
+                    setNegativeButton("갤러리") { _, _ ->
+                        mainActivity.requestGalleryPhoto()
+                    }
+                    show()
+                }
+            }
+
+            popupBinding.searchbutton.setOnClickListener searchHandler@ {
+                var result: PlantAcademic
+
+                if (popupBinding.searchwithname.text.length > 2) {
+                    val tempResult = plantAcademic.find { academic ->
+                        academic.name.startsWith(popupBinding.searchwithname.text)
+                    }
+                    if (tempResult == null) {
+                        Toast.makeText(mainActivity, "지정하신 식물을 찾을 수 없습니다!", Toast.LENGTH_SHORT).show()
+                        return@searchHandler
+                    } else {
+                        result = tempResult
+                    }
+                } else if (tookPicture) {
+                    val fileDataPart = FileDataPart.from(mainActivity.capturedImage!!.absolutePath, name = "images")
+
+                    runBlocking {
+                        val plantNetResult = async (Dispatchers.IO) {
+                            val response = Fuel.upload(
+                                path = "https://my-api.plantnet.org/v2/identify/all?api-key=${mainActivity.plantNetKey}",
+                                parameters = listOf("organs" to "auto"),
+                                method = Method.POST
+                            ).add(fileDataPart).responseObject<PlantNetResponse>()
+
+                            if (response.third.component2() != null) {
+                                Toast.makeText(mainActivity, "식물 정보를 사진을 이용해 조회하는데 실패했습니다!", Toast.LENGTH_LONG).show()
+                                return@async null
+                            } else {
+                                return@async response.third.get()
+                            }
+                        }
+
+                        plantNetResult.await()?.let { plantInfo ->
+                            Toast.makeText(mainActivity, plantInfo.results.first().species.scientificNameWithoutAuthor, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    return@searchHandler
+                }
+            }
         }
     }
 
@@ -81,12 +158,6 @@ class MainFragment : Fragment() {
         calendar.set(Calendar.MINUTE, minute)
         calendar.set(Calendar.HOUR_OF_DAY, hour)
         return calendar.timeInMillis
-    }
-
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
 

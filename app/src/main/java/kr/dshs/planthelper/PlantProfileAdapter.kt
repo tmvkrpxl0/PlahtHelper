@@ -4,29 +4,24 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
+import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.net.toUri
 import kr.dshs.planthelper.data.PlantProfile
 
-class PlantProfileAdapter(context: Context, private val data: List<PlantProfile>): BaseAdapter() {
+class PlantProfileAdapter(context: Context, private val data: MutableList<PlantProfile>): ArrayAdapter<PlantProfile>(context, R.layout.plant_profile, data) {
     private val inflater = LayoutInflater.from(context)
 
-    override fun getCount() = data.size
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val element = data[position]
 
-    override fun getItem(position: Int) = data[position]
-
-    override fun getItemId(position: Int) = position.toLong()
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = inflater.inflate(R.layout.plant_profile, null)
+        val view = convertView ?: inflater.inflate(R.layout.plant_profile, parent, false)
 
         val image = view.findViewById<ImageView>(R.id.photo)!!
         val name = view.findViewById<TextView>(R.id.name)!!
 
-        val element = data[position]
-
-        // image.setImageURI(element.photoUri)
+        if (element.photoFile != null && element.photoFile.exists()) image.setImageURI(element.photoFile.toUri())
         name.text = element.customName ?: element.academic.name
 
         return view

@@ -10,6 +10,7 @@ import kotlin.time.Duration
 @Serializable
 data class PlantAcademic(
     val name: String,
+    @SerialName("scientific_name") val scientificName: String? = null, // TODO null 금지하기
     @SerialName("accepted_temperature") @Serializable(with = IntRangeSerializer::class) val acceptableTemperature: IntRange,
     @Serializable(with = DurationRangeSerializer::class) @SerialName("watering_period") val wateringPeriod: ClosedRange<@Contextual Duration>? = null,
     @SerialName("max_height_meter") val maxHeight: Double? = null,

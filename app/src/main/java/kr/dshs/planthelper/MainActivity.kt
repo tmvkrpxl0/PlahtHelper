@@ -31,7 +31,7 @@ import java.io.File
 import java.util.*
 
 
-lateinit var plantAcademic: List<PlantAcademic>
+lateinit var plantAcademics: List<PlantAcademic>
 
 val plantProfiles = mutableListOf<PlantProfile>()
 
@@ -47,14 +47,7 @@ class MainActivity : AppCompatActivity() {
             launch(Dispatchers.IO) {
                 val contents =
                     resources.openRawResource(R.raw.academic_plants).bufferedReader().readText()
-                plantAcademic = Json.decodeFromString(contents)
-
-                plantProfiles += PlantProfile(
-                    plantAcademic[0],
-                    null,
-                    Calendar.getInstance().apply{ set(2022, 2, 1) }.time,
-                    Uri.parse("file://a.png")
-                )
+                plantAcademics = Json.decodeFromString(contents)
             }
             createChannel()
             launch {
@@ -158,7 +151,11 @@ class MainActivity : AppCompatActivity() {
 
                 launch(Dispatchers.IO) {
                     val copiedFile = filesDir.resolve("${UUID.randomUUID()}.${getMimeType(imageUri)}")
-                    contentResolver.openInputStream(imageUri)!!.buffered().use { it.copyTo(copiedFile.outputStream().buffered()) }
+                    contentResolver.openInputStream(imageUri)!!.buffered().use { input ->
+                        copiedFile.outputStream().buffered().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
                     capturedImage = copiedFile
                 }
             } else if (requestCode == NEW_PHOTO_REQUEST && intent!!.hasExtra("data")) {

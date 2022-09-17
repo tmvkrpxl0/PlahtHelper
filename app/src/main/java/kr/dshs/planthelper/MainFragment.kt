@@ -2,13 +2,17 @@ package kr.dshs.planthelper
 
 import android.app.AlarmManager
 import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.github.kittinunf.fuel.Fuel
@@ -21,6 +25,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kr.dshs.planthelper.data.PlantAcademic
 import kr.dshs.planthelper.data.PlantNetResponse
+import kr.dshs.planthelper.data.PlantProfile
 import kr.dshs.planthelper.databinding.AddPlantPopupBinding
 import kr.dshs.planthelper.databinding.FragmentMainBinding
 import java.util.*
@@ -29,6 +34,7 @@ class MainFragment : Fragment() {
     var plantSelectPopup: View? = null
     private lateinit var mainActivity: MainActivity
     var tookPicture = false
+    var chosenPlantAcademic: PlantAcademic? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -65,21 +71,29 @@ class MainFragment : Fragment() {
         addButton.setOnClickListener {
             plantSelectPopup = layoutInflater.inflate(R.layout.add_plant_popup, null)
             val popupBinding = AddPlantPopupBinding.bind(plantSelectPopup!!)
-            plantSelectPopup!!.removeCallbacks {
-                plantSelectPopup = null
-                tookPicture = false
-            }
 
             val width = LinearLayout.LayoutParams.WRAP_CONTENT
             val height = LinearLayout.LayoutParams.WRAP_CONTENT
 
             val popupWindow = PopupWindow(plantSelectPopup, width, height, true)
 
+            val currentNightMode = mainActivity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                popupBinding.root.setBackgroundColor(Color.argb(255, 27, 27, 27))
+            }
+
             popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0)
             popupWindow.dimBehind()
 
             popupBinding.cancelbutton.setOnClickListener {
                 popupWindow.dismiss()
+            }
+
+            popupWindow.setOnDismissListener {
+                plantSelectPopup = null
+                tookPicture = false
+                mainActivity.capturedImage = null
+                chosenPlantAcademic = null
             }
 
             popupBinding.camerabutton.setOnClickListener {
@@ -98,18 +112,46 @@ class MainFragment : Fragment() {
                 }
             }
 
-            popupBinding.searchbutton.setOnClickListener searchHandler@ {
-                var result: PlantAcademic
+            popupBinding.setplantdatebutton.setOnClickListener {
+                val calender = Calendar.getInstance()
+                val year = calender.get(Calendar.YEAR)
+                val month = calender.get(Calendar.MONTH)
+                val day = calender.get(Calendar.DAY_OF_MONTH)
+                DatePickerDialog(mainActivity, { datePicker: DatePicker, newYear: Int, newMonth: Int, newDay: Int ->
+                    popupBinding.setplantdatebutton.text = "$newYear-$newMonth-$newDay"
+                }, year, month, day).show()
+            }
 
-                if (popupBinding.searchwithname.text.length > 2) {
-                    val tempResult = plantAcademic.find { academic ->
+            popupBinding.addbutton.setOnClickListener addButtonHandler@ {
+                if (chosenPlantAcademic == null) {
+                    Toast.makeText(mainActivity, "먼저 식물을 선택해주세요!", Toast.LENGTH_LONG).show()
+                    return@addButtonHandler
+                }
+                val plantedDate = if (!popupBinding.setplantdatebutton.text.contains("-")) null else {
+                    val text = popupBinding.setplantdatebutton.text
+                    val split = text.split("-")
+                    val year = split[0].toInt()
+                    val month = split[1].toInt()
+                    val day = split[2].toInt()
+                    Calendar.getInstance().apply{ set(year, month, day) }.time
+                }
+
+                val customName = popupBinding.customnamefield.text.toString().ifEmpty { null }
+                val profile = PlantProfile(chosenPlantAcademic!!, customName, popupBinding.pickperiod.value, plantedDate, mainActivity.capturedImage)
+                adapter.add(profile)
+                popupWindow.dismiss()
+            }
+
+            popupBinding.searchbutton.setOnClickListener searchHandler@ {
+                val result: PlantAcademic? = if (popupBinding.searchwithname.text.isNotEmpty()) {
+                    val tempResult = plantAcademics.find { academic ->
                         academic.name.startsWith(popupBinding.searchwithname.text)
                     }
                     if (tempResult == null) {
                         Toast.makeText(mainActivity, "지정하신 식물을 찾을 수 없습니다!", Toast.LENGTH_SHORT).show()
                         return@searchHandler
                     } else {
-                        result = tempResult
+                        tempResult
                     }
                 } else if (tookPicture) {
                     val fileDataPart = FileDataPart.from(mainActivity.capturedImage!!.absolutePath, name = "images")
@@ -131,11 +173,32 @@ class MainFragment : Fragment() {
                         }
 
                         plantNetResult.await()?.let { plantInfo ->
-                            Toast.makeText(mainActivity, plantInfo.results.first().species.scientificNameWithoutAuthor, Toast.LENGTH_SHORT).show()
+                            val scientificName = plantInfo.results.first().species.scientificNameWithoutAuthor
+
+                            Log.i("name", scientificName)
+                            val findResult = plantAcademics.filter { it.scientificName != null }.find { it.scientificName!! == scientificName }
+                            if (findResult == null) {
+                                Toast.makeText(mainActivity, "등록되지 않은 식물입니다!", Toast.LENGTH_LONG).show()
+                                return@runBlocking null
+                            }
+                            popupBinding.searchwithname.setText(findResult.name)
+                            return@runBlocking findResult
                         }
                     }
                 } else {
+                    Toast.makeText(mainActivity, "식물 이름 또는 식물 사진을 지정해주세요!", Toast.LENGTH_LONG).show()
                     return@searchHandler
+                }
+
+                if (result != null) {
+                    chosenPlantAcademic = result
+                    result.wateringPeriod?.let {
+                        popupBinding.pickperiod.minValue = it.start.inWholeDays.toInt()
+                        popupBinding.pickperiod.maxValue = it.endInclusive.inWholeDays.toInt()
+                        popupBinding.pickperiod.isEnabled = true
+                    }
+                    popupBinding.setplantdatebutton.isEnabled = true
+                    popupBinding.customnamefield.isEnabled = true
                 }
             }
         }

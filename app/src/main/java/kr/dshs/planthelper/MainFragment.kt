@@ -1,5 +1,6 @@
 package kr.dshs.planthelper
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -12,7 +13,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.github.kittinunf.fuel.Fuel
@@ -22,23 +22,32 @@ import com.github.kittinunf.fuel.serialization.responseObject
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kr.dshs.planthelper.data.PlantAcademic
 import kr.dshs.planthelper.data.PlantNetResponse
 import kr.dshs.planthelper.data.PlantProfile
 import kr.dshs.planthelper.databinding.AddPlantPopupBinding
 import kr.dshs.planthelper.databinding.FragmentMainBinding
+import java.time.Duration
 import java.util.*
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 class MainFragment : Fragment() {
     var plantSelectPopup: View? = null
     private lateinit var mainActivity: MainActivity
     var tookPicture = false
-    var chosenPlantAcademic: PlantAcademic? = null
+    private var chosenPlantAcademic: PlantAcademic? = null
+    private val adapter: PlantProfileAdapter by lazy { PlantProfileAdapter(mainActivity, plantProfiles) }
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private lateinit var binding: FragmentMainBinding
+
+    init {
+        Log.d("creation", "Main Fragment created!")
+    }
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -51,19 +60,19 @@ class MainFragment : Fragment() {
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val listView = view.findViewById<ListView>(R.id.plants)!!
 
-        val adapter = PlantProfileAdapter(requireActivity(), plantProfiles)
-
         listView.adapter = adapter
 
         val navController = findNavController()
 
-        listView.setOnItemClickListener { _: AdapterView<*>, _: View, _: Int, _: Long ->
-            navController.navigate(R.id.PlantFragment)
+        listView.setOnItemClickListener { _: AdapterView<*>, _: View, position: Int, _: Long ->
+            val action = MainFragmentDirections.actionMainFragmentToPlantFragment(position)
+            navController.navigate(action)
         }
 
         val addButton = view.findViewById<FloatingActionButton>(R.id.addplant)
@@ -117,7 +126,7 @@ class MainFragment : Fragment() {
                 val year = calender.get(Calendar.YEAR)
                 val month = calender.get(Calendar.MONTH)
                 val day = calender.get(Calendar.DAY_OF_MONTH)
-                DatePickerDialog(mainActivity, { datePicker: DatePicker, newYear: Int, newMonth: Int, newDay: Int ->
+                DatePickerDialog(mainActivity, { _: DatePicker, newYear: Int, newMonth: Int, newDay: Int ->
                     popupBinding.setplantdatebutton.text = "$newYear-$newMonth-$newDay"
                 }, year, month, day).show()
             }
@@ -137,8 +146,12 @@ class MainFragment : Fragment() {
                 }
 
                 val customName = popupBinding.customnamefield.text.toString().ifEmpty { null }
-                val profile = PlantProfile(chosenPlantAcademic!!, customName, popupBinding.pickperiod.value, plantedDate, mainActivity.capturedImage)
+                val id = Random.nextInt(0..2147483647)
+                val profile = PlantProfile(chosenPlantAcademic!!, customName, popupBinding.pickperiod.value, plantedDate, mainActivity.capturedImage, id)
                 adapter.add(profile)
+
+                scheduleNotification(mainActivity, popupBinding, profile)
+
                 popupWindow.dismiss()
             }
 
@@ -165,7 +178,9 @@ class MainFragment : Fragment() {
                             ).add(fileDataPart).responseObject<PlantNetResponse>()
 
                             if (response.third.component2() != null) {
-                                Toast.makeText(mainActivity, "식물 정보를 사진을 이용해 조회하는데 실패했습니다!", Toast.LENGTH_LONG).show()
+                                launch(Dispatchers.Main) {
+                                    Toast.makeText(mainActivity, "식물 정보를 사진을 이용해 조회하는데 실패했습니다!", Toast.LENGTH_LONG).show()
+                                }
                                 return@async null
                             } else {
                                 return@async response.third.get()
@@ -178,10 +193,9 @@ class MainFragment : Fragment() {
                             Log.i("name", scientificName)
                             val findResult = plantAcademics.filter { it.scientificName != null }.find { it.scientificName!! == scientificName }
                             if (findResult == null) {
-                                Toast.makeText(mainActivity, "등록되지 않은 식물입니다!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(mainActivity, "등록되지 않은 식물입니다!: $scientificName", Toast.LENGTH_LONG).show()
                                 return@runBlocking null
                             }
-                            popupBinding.searchwithname.setText(findResult.name)
                             return@runBlocking findResult
                         }
                     }
@@ -191,6 +205,7 @@ class MainFragment : Fragment() {
                 }
 
                 if (result != null) {
+                    popupBinding.searchwithname.setText(result.name)
                     chosenPlantAcademic = result
                     result.wateringPeriod?.let {
                         popupBinding.pickperiod.minValue = it.start.inWholeDays.toInt()
@@ -204,22 +219,33 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun scheduleNotification(context: Context, binding: AddPlantPopupBinding) {
+    private fun scheduleNotification(context: Context, binding: AddPlantPopupBinding, profile: PlantProfile) {
         val intent = Intent(context, AlarmBroadcast::class.java)
-        val pending = PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        intent.putExtra(profileIndexKey, plantProfiles.indexOf(profile))
+        val pending = PendingIntent.getBroadcast(context, profile.id, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val time = getTime(binding)
+        val firstAlarmTime = getTime(binding)
 
+        val intervalMillis = Duration.ofDays(binding.pickperiod.value.toLong()).toMillis()
+
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC_WAKEUP,
+            firstAlarmTime,
+            intervalMillis,
+            pending
+        )
     }
 
     private fun getTime(binding: AddPlantPopupBinding): Long {
+        val calendar = Calendar.getInstance()
+
         val minute = binding.time.minute
         val hour = binding.time.hour
 
-        val calendar = Calendar.getInstance()
         calendar.set(Calendar.MINUTE, minute)
         calendar.set(Calendar.HOUR_OF_DAY, hour)
+
         return calendar.timeInMillis
     }
 }

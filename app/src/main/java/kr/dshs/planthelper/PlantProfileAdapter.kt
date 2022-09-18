@@ -21,8 +21,8 @@ class PlantProfileAdapter(context: Context, private val data: MutableList<PlantP
         val image = view.findViewById<ImageView>(R.id.photo)!!
         val name = view.findViewById<TextView>(R.id.name)!!
 
-        if (element.photoFile != null && element.photoFile.exists()) image.setImageURI(element.photoFile.toUri())
-        name.text = element.customName ?: element.academic.name
+        if (element.photoFile?.exists() == true) image.setImageURI(element.photoFile.toUri())
+        name.text = element.getAnyName()
 
         return view
     }

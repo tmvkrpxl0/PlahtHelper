@@ -9,18 +9,21 @@ import androidx.core.app.NotificationManagerCompat
 /**
  * 24시간 포맷 사용함
  */
-const val notificationId = 1
 const val channelId = "planthelper_by_tmvkrpxl0"
 
 class AlarmBroadcast: BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) {
+    override fun onReceive(context: Context, intent: Intent) {
+        val index = intent.getIntExtra(profileIndexKey, -1)
+        assert(index != -1) { "알람에 아이디가 없습니다!" }
+
+        val plantProfile = plantProfiles[index]
         val builder = NotificationCompat.Builder(context, channelId)
-            .setContentTitle("Alarm test")
-            .setContentText("Contents")
+            .setContentTitle("물 줄 시간입니다!")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentText("${plantProfile.getAnyName()} 에 물 줄 시간이 되었습니다!}")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         val manager = NotificationManagerCompat.from(context)
-        manager.notify(notificationId, builder.build())
+        manager.notify(plantProfile.id, builder.build())
     }
-
 }

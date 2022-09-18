@@ -12,5 +12,10 @@ data class PlantProfile(
     val customName: String? = null,
     val wateringPeriod: Int,
     @Serializable(with = DateSerializer::class) val plantDate: Date? = null,
-    @Serializable(with = FileSerializer::class) val photoFile: File? = null
-)
+    @Serializable(with = FileSerializer::class) val photoFile: File? = null,
+    val id: Int
+) {
+    fun getAnyName(): String {
+        return customName?: academic.name
+    }
+}

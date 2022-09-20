@@ -12,6 +12,7 @@
   },
   {
     "name": "무늬 푸밀라 고무나무",
+    "scientific_name": "Ficus pumila",
     "accepted_temperature": "21..25",
     "watering_period": "4d..6d",
     "max_height_meter": 0.2,
@@ -22,6 +23,7 @@
   },
   {
     "name": "필로덴드론",
+    "scientific_name": "Philodendron",
     "accepted_temperature": "13..33",
     "watering_period": "10d..15d",
     "max_height_meter": 0.0,
@@ -32,6 +34,7 @@
   },
   {
     "name": "스킨답서스",
+    "scientific_name": "Epipremnum aureum",
     "accepted_temperature": "18..24",
     "watering_period": "4d..7d",
     "max_height_meter": 0.25,
@@ -42,6 +45,7 @@
   },
   {
     "name": "시페루스",
+    "scientific_name": "Cyperus alternifolius",
     "accepted_temperature": "16..20",
     "max_height_meter": 1.0,
     "needs_sunlight": "required",
@@ -50,6 +54,7 @@
   },
   {
     "name": "산세비에리아",
+    "scientific_name": "Sansevieria",
     "accepted_temperature": "18..27",
     "watering_period": "30d..32d",
     "max_height_meter": 3.0,
@@ -60,6 +65,7 @@
   },
   {
     "name": "아레카 야자",
+    "scientific_name": "Dypsis lutescens",
     "accepted_temperature": "16..20",
     "watering_period": "6d..8d",
     "max_height_meter": 2.0,
@@ -70,6 +76,7 @@
   },
   {
     "name": "아디안텀",
+    "scientific_name": "Adiantum raddianum",
     "accepted_temperature": "25..26",
     "watering_period": "6d..8d",
     "max_height_meter": 0.15,
@@ -80,6 +87,7 @@
   },
   {
     "name": "몬스테라",
+    "scientific_name": "Monstera",
     "accepted_temperature": "20..25",
     "watering_period": "3d..3d",
     "max_height_meter": 1.3,
@@ -90,6 +98,7 @@
   },
   {
     "name": "천냥금",
+    "scientific_name": "Ardisia japonica",
     "accepted_temperature": "20..23",
     "watering_period": "4d..4d",
     "max_height_meter": 1.3,
@@ -100,6 +109,7 @@
   },
   {
     "name": "금전수",
+    "scientific_name": "Zamioculcas zamiifolia",
     "accepted_temperature": "15..30",
     "watering_period": "7d..10d",
     "max_height_meter": 1.3,
@@ -110,6 +120,7 @@
   },
   {
     "name": "스투키",
+    "scientific_name": "Sansevieria stuckyi",
     "accepted_temperature": "18..27",
     "watering_period": "6d..7d",
     "max_height_meter": 1.3,
@@ -120,6 +131,7 @@
   },
   {
     "name": "산세베리아",
+    "scientific_name": "Sansevieria trifasciata",
     "accepted_temperature": "21..25",
     "watering_period": "3d..3d",
     "max_height_meter": 1.3,
@@ -129,6 +141,7 @@
   },
   {
     "name": "오렌지 자스민",
+    "scientific_name": "Murraya paniculata",
     "accepted_temperature": "15..25",
     "watering_period": "1d..1d",
     "max_height_meter": 1.3,
@@ -138,6 +151,7 @@
   },
   {
     "name": "드라세나 마지나타",
+    "scientific_name": "Dracaena marginata",
     "accepted_temperature": "18..27",
     "watering_period": "2d..2d",
     "max_height_meter": 2.3,

@@ -20,7 +20,7 @@ class AlarmBroadcast: BroadcastReceiver() {
         val builder = NotificationCompat.Builder(context, channelId)
             .setContentTitle("물 줄 시간입니다!")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentText("${plantProfile.getAnyName()} 에 물 줄 시간이 되었습니다!}")
+            .setContentText("${plantProfile.getAnyName()}에 물 줄 시간이 되었습니다!}")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         val manager = NotificationManagerCompat.from(context)

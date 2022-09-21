@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "kr.dshs.planthelper"
         minSdk 26
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -34,16 +34,17 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'kr.dshs.planthelper'
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.1'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.5.1'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.2'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.5.2'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0'
     implementation 'com.github.kittinunf.fuel:fuel-kotlinx-serialization:2.3.1'
     testImplementation 'junit:junit:4.13.2'

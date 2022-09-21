@@ -10,9 +10,10 @@
         android:id="@+id/imageButton"
         android:layout_width="255dp"
         android:layout_height="255dp"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="4dp"
         android:src="@drawable/ic_launcher_background"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="SpeakableTextPresentCheck" />
@@ -34,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
-            android:textSize="40sp" />
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/profileacademicname"
@@ -42,21 +43,28 @@
             android:layout_height="wrap_content"
             android:alpha="0.7"
             android:text="TextView"
-            android:textSize="40sp" />
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/profileplanteddate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
-            android:textSize="40sp" />
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/profilewateringperiod"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
-            android:textSize="40sp" />
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/profiledescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:textSize="24sp" />
 
     </LinearLayout>
 

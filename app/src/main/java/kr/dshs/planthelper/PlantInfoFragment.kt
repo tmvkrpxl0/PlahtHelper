@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kr.dshs.planthelper.databinding.FragmentPlantInfoBinding
-import java.util.*
 
 const val profileIndexKey: String = "kr.dshs.planthelper.profileindex"
 
@@ -46,6 +45,7 @@ class PlantInfoFragment : Fragment() {
             "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH)}-${calendar.get(Calendar.DAY_OF_MONTH)}"
         } else "알 수 없읍"
         binding.profilewateringperiod.text = "${plantProfile.wateringPeriod}일에 한번 물주기"
+        binding.profiledescription.text = plantProfile.academic.etcDescription
 
         binding.deleteprofilebutton.setOnClickListener {
             val alarmManager = mainActivity.getSystemService(Context.ALARM_SERVICE) as AlarmManager

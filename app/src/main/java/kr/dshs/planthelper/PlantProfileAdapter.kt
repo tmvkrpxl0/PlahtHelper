@@ -16,7 +16,10 @@ class PlantProfileAdapter(context: Context, private val data: MutableList<PlantP
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val element = data[position]
 
-        val view = convertView ?: inflater.inflate(R.layout.plant_profile, parent, false)
+        val view = if (convertView != null) convertView else {
+            val findResult = plantProfiles.indexOfFirst { it.id == element.id }
+            inflater.inflate(R.layout.plant_profile, parent, false)
+        }
 
         val image = view.findViewById<ImageView>(R.id.photo)!!
         val name = view.findViewById<TextView>(R.id.name)!!
@@ -25,5 +28,21 @@ class PlantProfileAdapter(context: Context, private val data: MutableList<PlantP
         name.text = element.getAnyName()
 
         return view
+    }
+
+    override fun add(`object`: PlantProfile?) {
+        super.add(`object`)
+    }
+
+    override fun remove(`object`: PlantProfile?) {
+        super.remove(`object`)
+    }
+
+    override fun addAll(collection: MutableCollection<out PlantProfile>) {
+        super.addAll(collection)
+    }
+
+    override fun addAll(vararg items: PlantProfile?) {
+        super.addAll(*items)
     }
 }

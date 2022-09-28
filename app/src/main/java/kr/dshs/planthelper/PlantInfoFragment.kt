@@ -33,6 +33,7 @@ class PlantInfoFragment : Fragment() {
         val navController = findNavController()
 
         val index = args.profileindex
+        val plantProfiles = plantProfiles
         val plantProfile = plantProfiles[index]
 
         if (plantProfile.photoFile?.exists() == true) binding.imageButton.setImageURI(plantProfile.photoFile.toUri())

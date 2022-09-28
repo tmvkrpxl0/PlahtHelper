@@ -18,22 +18,18 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kr.dshs.planthelper.data.PlantAcademic
-import kr.dshs.planthelper.data.PlantProfile
 import kr.dshs.planthelper.databinding.ActivityMainBinding
 import java.io.File
 import java.util.*
 
 
 lateinit var plantAcademics: List<PlantAcademic>
-
-val plantProfiles = mutableListOf<PlantProfile>()
 
 class MainActivity : AppCompatActivity() {
     lateinit var mainFragment: MainFragment
@@ -42,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     @Suppress("DeferredResultUnused")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        fileRoot = filesDir
 
         runBlocking {
             launch(Dispatchers.IO) {
@@ -75,12 +72,6 @@ class MainActivity : AppCompatActivity() {
                 binding = ActivityMainBinding.inflate(layoutInflater)
                 setContentView(binding.root)
                 setSupportActionBar(binding.toolbar)
-            }
-
-            launch {
-                val navController = findNavController(R.id.nav_host_fragment_content_main)
-                appBarConfiguration = AppBarConfiguration(navController.graph)
-                setupActionBarWithNavController(navController, appBarConfiguration)
             }
         }
     }

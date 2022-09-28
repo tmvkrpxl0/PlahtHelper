@@ -24,25 +24,58 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kr.dshs.planthelper.data.PlantAcademic
 import kr.dshs.planthelper.data.PlantNetResponse
 import kr.dshs.planthelper.data.PlantProfile
 import kr.dshs.planthelper.databinding.AddPlantPopupBinding
 import kr.dshs.planthelper.databinding.FragmentMainBinding
+import java.io.File
 import java.time.Duration
 import java.util.*
 import kotlin.random.Random
 import kotlin.random.nextInt
+lateinit var fileRoot: File
+private var saveOnModify = true
+val plantProfiles = object: LinkedList<PlantProfile>() {
+    override fun add(element: PlantProfile): Boolean {
+        return runBlocking {
+            val result = super.add(element)
+            if (saveOnModify) launch(Dispatchers.IO) {
+                save()
+            }
+            return@runBlocking result
+        }
+    }
+
+    override fun remove(element: PlantProfile): Boolean {
+        return runBlocking {
+            val result = super.remove(element)
+            if (saveOnModify) launch(Dispatchers.IO) {
+                save()
+            }
+            return@runBlocking result
+        }
+    }
+
+    private fun save() {
+        val toSave: Array<PlantProfile> = this.toTypedArray()
+        val data = fileRoot.resolve("data.json")
+        val contents = Json.encodeToString(toSave)
+        data.writeText(contents)
+    }
+}
 
 class MainFragment : Fragment() {
     var plantSelectPopup: View? = null
     private lateinit var mainActivity: MainActivity
     var tookPicture = false
     private var chosenPlantAcademic: PlantAcademic? = null
+
     private val adapter: PlantProfileAdapter by lazy { PlantProfileAdapter(mainActivity, plantProfiles) }
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private lateinit var binding: FragmentMainBinding
 
     init {
@@ -53,9 +86,21 @@ class MainFragment : Fragment() {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View {
-        binding = FragmentMainBinding.inflate(inflater, container, false)
-        mainActivity = requireActivity() as MainActivity
-        mainActivity.mainFragment = this
+        runBlocking {
+            launch(Dispatchers.IO) {
+                binding = FragmentMainBinding.inflate(inflater, container, false)
+            }
+            mainActivity = requireActivity() as MainActivity
+            mainActivity.mainFragment = this@MainFragment
+            if (plantProfiles.isEmpty()) launch(Dispatchers.IO) {
+                saveOnModify = false
+                val savedProfiles = mainActivity.filesDir.resolve("data.json")
+                if (savedProfiles.exists()) {
+                    plantProfiles.addAll(Json.decodeFromString(savedProfiles.readText()))
+                }
+                saveOnModify = true
+            }
+        }
         return binding.root
 
     }
@@ -229,7 +274,7 @@ class MainFragment : Fragment() {
 
         val intervalMillis = Duration.ofDays(binding.pickperiod.value.toLong()).toMillis()
 
-        alarmManager.setInexactRepeating(
+        alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
             firstAlarmTime,
             intervalMillis,
